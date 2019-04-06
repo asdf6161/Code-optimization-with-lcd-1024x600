@@ -185,13 +185,13 @@ int main(void)
 		combType *c_line = Dwt::repack_to_uint32(line, data->getPixelCnt());
 //		bType *res1 = Dwt::DirectTransform(line, data->getPixelCnt(), &out_size, 4);
 		res2 = Dwt::DirectTransform(c_line, (data->getPixelCnt() - 1) / 2 , &out_size, 8);
-		/*std::string s = "";
+		std::string s = "";
 		for (uint16_t i = 0; i < out_size; ++i) {
 			int16_t low = res2[i];
 			int16_t high = res2[i] >> 16;
 			s = std::to_string(low) + "," + std::to_string(high) + ",";
 			HAL_UART_Transmit(&huart1, (unsigned char *)s.data(), s.size(), 1000);
-		}*/
+		}
 
 		std::string str = "Check on exit method: " + std::to_string(code_analis[0]);
 		BSP_LCD_DisplayStringAtLine(lcd_line++, (unsigned char *)str.data());

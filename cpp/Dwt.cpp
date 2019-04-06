@@ -216,24 +216,27 @@ combType* Dwt::DirectTransform(combType* arr, uint16_t size, uint16_t *out_size,
 	for (i = 0; i < size; i+=8)
 	{
 		/*cap->reset_cnt();
-		SET_BIT(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);
-		detail[j] = __SHSUB16(detail[i], detail[i + 1]);
-		detail[j++] = __SHADD16(detail[i], detail[i + 1]);
+		SET_BIT(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);*/
 
-		detail[j] = __SHSUB16(detail[i + 2], detail[i + 3]);
-		detail[j++] = __SHADD16(detail[i + 2], detail[i + 3]);
+		detail[j] 			= __SHSUB16(arr[i], arr[i + 1]);
+		approximation[j++] 	= __SHADD16(arr[i], arr[i + 1]);
+		detail[j] 			= __SHSUB16(arr[i + 2], arr[i + 3]);
+		approximation[j++] 	= __SHADD16(arr[i + 2], arr[i + 3]);
+		detail[j] 			= __SHSUB16(arr[i + 4], arr[i + 5]);
+		approximation[j++] 	= __SHADD16(arr[i + 4], arr[i + 5]);
+		detail[j] 			= __SHSUB16(arr[i + 6], arr[i + 7]);
+		approximation[j++] 	= __SHADD16(arr[i + 6], arr[i + 7]);
+		/*detail[j] 			= __SHSUB16(arr[i + 8], arr[i + 9]);
+		approximation[j++] 	= __SHADD16(arr[i + 8], arr[i + 9]);
+		detail[j] 			= __SHSUB16(arr[i + 10], arr[i + 11]);
+		approximation[j++] 	= __SHADD16(arr[i + 10], arr[i + 11]);*/
 
-		detail[j] = __SHSUB16(detail[i + 4], detail[i + 5]);
-		detail[j++] = __SHADD16(detail[i + 4], detail[i + 5]);
-
-		detail[j] = __SHSUB16(detail[i + 6], detail[i + 7]);
-		detail[j++] = __SHADD16(detail[i + 6], detail[i + 7]);
-		CLEAR_BIT(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);
+		/*CLEAR_BIT(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);
 		uint32_t res = 	DWT->CYCCNT;
 		asm("nop");*/
-		detail[j] = __SHSUB16(arr[i], arr[i + 1]);
+//		detail[j] = __SHSUB16(arr[i], arr[i + 1]);
 //		 __ASM volatile ("shsub16 %0, %1, %2" : "=r" (detail[j]) : "r" (arr[i]), "r" (arr[i + 1]) );
-		approximation[j++] = __SHADD16(arr[i], arr[i + 1]);
+//		approximation[j++] = __SHADD16(arr[i], arr[i + 1]);
 //		 __ASM volatile ("shadd16 %0, %1, %2" : "=r" (approximation[j++]) : "r" (arr[i]), "r" (arr[i + 1]) );
 	}
 #ifdef TIME_ANALIS  // 2

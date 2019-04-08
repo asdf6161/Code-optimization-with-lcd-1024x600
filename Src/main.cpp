@@ -89,7 +89,8 @@ static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 uint32_t code_analis[10];
-combType new_arr[2000];
+combType new_arr[1000];
+combType *res_arr;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -104,6 +105,7 @@ int main(void)
 {
 	/* USER CODE BEGIN 1 */
 	uint8_t lcd_line = 4;
+	res_arr = new combType[1000];
 	/* USER CODE END 1 */
 
 	/* MPU Configuration--------------------------------------------------------*/
@@ -195,8 +197,8 @@ int main(void)
 		}*/
 
 		for (uint16_t i = 0; i < out_size; ++i) {
-			int16_t low = res2[i];
-			int16_t high = res2[i] >> 16;
+			int16_t low = res_arr[i];
+			int16_t high = res_arr[i] >> 16;
 			uint16_t posx = (uint16_t)(i * (1024.0 / out_size / 2)) << 1;
 			uint16_t posy = 480-10;
 			if (low < 0){

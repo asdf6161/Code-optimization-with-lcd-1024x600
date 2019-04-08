@@ -12,6 +12,8 @@ extern uint32_t code_analis[10];
 TimeCapture *cap = new TimeCapture();
 #endif
 extern combType new_arr[2000];
+extern combType *res_arr;
+uint16_t res_arr_index = 0;
 
 Dwt::Dwt()
 {
@@ -197,12 +199,6 @@ combType* Dwt::DirectTransform(combType* arr, uint16_t size, uint16_t *out_size,
 #endif
 	uint16_t half_size = *out_size >> 1;
 
-	combType *detail = new combType[half_size];
-	combType *approximation = new combType[half_size];
-//	combType detail[size/2];
-//	combType approximation[size/2];
-//	combType detail2[size/2];
-
 	uint16_t i = 0;
 #ifdef TIME_ANALIS  // 1
 	code_analis[1] = cap->stop_capture();
@@ -213,15 +209,15 @@ combType* Dwt::DirectTransform(combType* arr, uint16_t size, uint16_t *out_size,
 	cap->reset_cnt();
 	cap->start_capture();
 #endif
-	uint16_t j = 0;
-
 	for (i = 0; i < size; i+=2)
 	{
 		/*cap->reset_cnt();
 		SET_BIT(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);*/
 
-		detail[j] 			= __SHSUB16(arr[i], arr[i + 1]);
-		approximation[j++] 	= __SHADD16(arr[i], arr[i + 1]);
+//		detail[j] 			= __SHSUB16(arr[i], arr[i + 1]);
+		res_arr[res_arr_index] = __SHSUB16(arr[i], arr[i + 1]);
+//		approximation[j++] 	= __SHADD16(arr[i], arr[i + 1]);
+		res_arr[half_size + res_arr_index++] = __SHADD16(arr[i], arr[i + 1]);
 //		detail[j] 			= __SHSUB16(arr[i + 2], arr[i + 3]);
 //		approximation[j++] 	= __SHADD16(arr[i + 2], arr[i + 3]);
 //		detail[j] 			= __SHSUB16(arr[i + 4], arr[i + 5]);
@@ -250,25 +246,16 @@ combType* Dwt::DirectTransform(combType* arr, uint16_t size, uint16_t *out_size,
 	cap->reset_cnt();
 	cap->start_capture();
 
-	combType* app_res =  new combType[size];
-	std::memmove(app_res, approximation, size * sizeof(combType));
 #else
 	uint16_t out_s;
 	combType* app_res = Dwt::DirectTransform(approximation, half_size, &out_s, N-1);
 #endif
 
-	combType *ret = new combType[*out_size];
-	std::memmove(ret, detail, sizeof(combType) * half_size);
-	std::memmove(ret + half_size, app_res, sizeof(combType) * half_size);
-
-	delete[] detail;
-	delete[] approximation;
-	delete[] app_res;
 #ifdef TIME_ANALIS  // 3
 	code_analis[3] = cap->stop_capture();
 #endif
 
-	return ret;
+	return nullptr;
 }
 
 

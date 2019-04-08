@@ -44,5 +44,6 @@ public:
 	static bType * InverseTransform(bType *arr, uint16_t size, uint8_t N);
 
 	static combType * repack_to_uint32(bType * arr, uint16_t size);
+
 };
 

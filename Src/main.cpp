@@ -89,6 +89,7 @@ static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 uint32_t code_analis[10];
+combType new_arr[2000];
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -184,13 +185,30 @@ int main(void)
 		line = data->getLine();
 		combType *c_line = Dwt::repack_to_uint32(line, data->getPixelCnt());
 //		bType *res1 = Dwt::DirectTransform(line, data->getPixelCnt(), &out_size, 4);
-		res2 = Dwt::DirectTransform(c_line, (data->getPixelCnt() - 1) / 2 , &out_size, 8);
+		res2 = Dwt::DirectTransform(new_arr, (data->getPixelCnt() - 1) / 2 , &out_size, 8);
 		std::string s = "";
-		for (uint16_t i = 0; i < out_size; ++i) {
+		/*for (uint16_t i = 0; i < out_size; ++i) {
 			int16_t low = res2[i];
 			int16_t high = res2[i] >> 16;
 			s = std::to_string(low) + "," + std::to_string(high) + ",";
 			HAL_UART_Transmit(&huart1, (unsigned char *)s.data(), s.size(), 1000);
+		}*/
+
+		for (uint16_t i = 0; i < out_size; ++i) {
+			int16_t low = res2[i];
+			int16_t high = res2[i] >> 16;
+			uint16_t posx = (uint16_t)(i * (1024.0 / out_size / 2)) << 1;
+			uint16_t posy = 480-10;
+			if (low < 0){
+				BSP_LCD_DrawVLine(posx, posy, abs(low));
+			} else {
+				BSP_LCD_DrawVLine(posx, posy - low, low);
+			}
+			if (high < 0){
+				BSP_LCD_DrawVLine(posx + 1, posy, abs(high));
+			} else {
+				BSP_LCD_DrawVLine(posx + 1, posy - high, high);
+			}
 		}
 
 		std::string str = "Check on exit method: " + std::to_string(code_analis[0]);

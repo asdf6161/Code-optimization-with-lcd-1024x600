@@ -11,6 +11,7 @@
 extern uint32_t code_analis[10];
 TimeCapture *cap = new TimeCapture();
 #endif
+extern combType new_arr[2000];
 
 Dwt::Dwt()
 {
@@ -37,7 +38,7 @@ combType * Dwt::repack_to_uint32(bType * arr, uint16_t size)
 	}*/
 
 	//for __SHADD16
-	combType *new_arr = new combType[size / 2];
+//	combType *new_arr = new combType[size / 2];
 	uint16_t j = 0;
 	for (uint16_t i = 0; i < size; i+=4)
 	{
@@ -196,11 +197,11 @@ combType* Dwt::DirectTransform(combType* arr, uint16_t size, uint16_t *out_size,
 #endif
 	uint16_t half_size = *out_size >> 1;
 
-//	bType *detail = new bType[half_size];
-//	bType *approximation = new bType[half_size];
-	combType *detail = new combType[size/2];
-	combType *approximation = new combType[size/2];
-	combType detail2[size/2];
+	combType *detail = new combType[half_size];
+	combType *approximation = new combType[half_size];
+//	combType detail[size/2];
+//	combType approximation[size/2];
+//	combType detail2[size/2];
 
 	uint16_t i = 0;
 #ifdef TIME_ANALIS  // 1
@@ -213,19 +214,20 @@ combType* Dwt::DirectTransform(combType* arr, uint16_t size, uint16_t *out_size,
 	cap->start_capture();
 #endif
 	uint16_t j = 0;
-	for (i = 0; i < size; i+=8)
+
+	for (i = 0; i < size; i+=2)
 	{
 		/*cap->reset_cnt();
 		SET_BIT(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);*/
 
 		detail[j] 			= __SHSUB16(arr[i], arr[i + 1]);
 		approximation[j++] 	= __SHADD16(arr[i], arr[i + 1]);
-		detail[j] 			= __SHSUB16(arr[i + 2], arr[i + 3]);
-		approximation[j++] 	= __SHADD16(arr[i + 2], arr[i + 3]);
-		detail[j] 			= __SHSUB16(arr[i + 4], arr[i + 5]);
-		approximation[j++] 	= __SHADD16(arr[i + 4], arr[i + 5]);
-		detail[j] 			= __SHSUB16(arr[i + 6], arr[i + 7]);
-		approximation[j++] 	= __SHADD16(arr[i + 6], arr[i + 7]);
+//		detail[j] 			= __SHSUB16(arr[i + 2], arr[i + 3]);
+//		approximation[j++] 	= __SHADD16(arr[i + 2], arr[i + 3]);
+//		detail[j] 			= __SHSUB16(arr[i + 4], arr[i + 5]);
+//		approximation[j++] 	= __SHADD16(arr[i + 4], arr[i + 5]);
+//		detail[j] 			= __SHSUB16(arr[i + 6], arr[i + 7]);
+//		approximation[j++] 	= __SHADD16(arr[i + 6], arr[i + 7]);
 		/*detail[j] 			= __SHSUB16(arr[i + 8], arr[i + 9]);
 		approximation[j++] 	= __SHADD16(arr[i + 8], arr[i + 9]);
 		detail[j] 			= __SHSUB16(arr[i + 10], arr[i + 11]);

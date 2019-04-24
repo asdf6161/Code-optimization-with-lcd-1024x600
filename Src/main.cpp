@@ -59,6 +59,9 @@ extern "C" {
 }
 #include "VideoData.h"
 #include "Dwt.h"
+#include "TimeCapture.h"
+//#include <vector>
+//using std::vector;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -89,12 +92,30 @@ static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 uint32_t code_analis[10];
-combType new_arr[1000];
-combType *res_arr;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+static vector<float> DirectTransformVector(vector<float> SourceList, int N)
+{
+	if (SourceList.size() == 1 || N == 0)
+		return SourceList;
+
+	vector<float> RetVal;
+	vector<float> TmpArr;
+
+	for (int j = 0; j < SourceList.size() - 1; j+=2)
+	{
+		RetVal.push_back((const float)((SourceList[j] - SourceList[j + 1]) / 2.0));
+		TmpArr.push_back((const float)((SourceList[j] + SourceList[j + 1]) / 2.0));
+	}
+
+	vector<float> res = DirectTransformVector(TmpArr, N-1);
+//	vector<float>::iterator it = res.iterator;
+	RetVal.insert(RetVal.begin(), res.begin(), res.end());
+
+	return RetVal;
+}
 /* USER CODE END 0 */
 
 /**
@@ -105,7 +126,13 @@ int main(void)
 {
 	/* USER CODE BEGIN 1 */
 	uint8_t lcd_line = 4;
-	res_arr = new combType[1000];
+
+	uint16_t fisrt = (9 << 8) | (8);
+	uint16_t secound = (7 << 8) | (6);
+	uint32_t r = __PKHBT(fisrt,secound, 16);  // 6 8
+	uint32_t r2 = __PKHTB(secound,fisrt, 16);  // 7 9
+
+//	res_arr = new combType[1000];
 	/* USER CODE END 1 */
 
 	/* MPU Configuration--------------------------------------------------------*/
@@ -174,6 +201,7 @@ int main(void)
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	VideoData *data = new VideoData();
+	Dwt dwt = Dwt();
 
 //	TimeCapture *cap = new TimeCapture();
 
@@ -182,23 +210,108 @@ int main(void)
 
 	combType *res2;
 	uint16_t out_size = 0;
+	TimeCapture cap1;
+	uint32_t time = 0;
 	if (data->openFile("Vid13.al")){
+		std::string s = "";
 		BSP_LCD_DisplayStringAtLine(lcd_line++, (unsigned char *)"File open ok.");
 		line = data->getLine();
-		combType *c_line = Dwt::repack_to_uint32(line, data->getPixelCnt());
-//		bType *res1 = Dwt::DirectTransform(line, data->getPixelCnt(), &out_size, 4);
-		res2 = Dwt::DirectTransform(new_arr, (data->getPixelCnt() - 1) / 2 , &out_size, 8);
-		std::string s = "";
-		/*for (uint16_t i = 0; i < out_size; ++i) {
-			int16_t low = res2[i];
-			int16_t high = res2[i] >> 16;
+
+		/******************Из википедии**********************************/
+		/****************************************************************/
+		cap1.reset_cnt();
+		cap1.start_capture();
+
+		vector<float> lst;
+		for (uint16_t i = 0; i < data->getPixelCnt() - 1; ++i) {
+			lst.push_back(line[i]);
+		}
+		vector<float> res_lst = DirectTransformVector(lst, 3);
+//		vector<float> lst_res = Dwt::DirectTransformVector(lst);
+
+		time = cap1.stop_capture();
+		s = "Time for code from wiki: " + std::to_string(time);
+		BSP_LCD_DisplayStringAtLine(lcd_line++, (unsigned char *)s.data());
+
+		HAL_UART_Transmit(&huart1, (unsigned char *)"\r\nwiki=", 7, 1000);
+		for (uint16_t i = 0; i < res_lst.size(); ++i) {
+			s = std::to_string((uint16_t)res_lst.at(i)) + ",";
+			HAL_UART_Transmit(&huart1, (unsigned char *)s.data(), s.size(), 1000);
+		}
+		/****************************************************************/
+		/******************Из википедии**********************************/
+
+
+		/****************Вейвлет не оптимизированный*********************/
+		/****************************************************************/
+		cap1.reset_cnt();
+		cap1.start_capture();
+
+		bType *dwt_res = dwt.DirectTransform(line, data->getPixelCnt() - 1, &out_size, 3);
+
+		time = cap1.stop_capture();
+		s = "Time for not optimized DirectTransform: " + std::to_string(time);
+		BSP_LCD_DisplayStringAtLine(lcd_line++, (unsigned char *)s.data());
+		/****************************************************************/
+		/****************Вейвлет не оптимизированный*********************/
+
+
+		/****************Оптимизированный вейвлет************************/
+		/****************************************************************/
+		cap1.reset_cnt();
+		cap1.start_capture();
+
+		dwt.repack_to_uint32(line, data->getPixelCnt());
+		dwt.DirectTransform((data->getPixelCnt() - 1) / 2 , &out_size, 3);
+
+		time = cap1.stop_capture();
+		s = "Time for optimized DirectTransform: " + std::to_string(time);
+		BSP_LCD_DisplayStringAtLine(lcd_line++, (unsigned char *)s.data());
+		/****************************************************************/
+		/****************Оптимизированный вейвлет************************/
+
+
+		/************Обратное преобразование не оптимизированное*********/
+		/****************************************************************/
+		s = "";
+		cap1.reset_cnt();
+		cap1.start_capture();
+
+		bType *arr = (bType*) realloc(dwt.dwt, (data->getPixelCnt() - 1) * sizeof(bType));
+		bType *idwt = Dwt::InverseTransform(arr, (data->getPixelCnt() - 1), 3);
+
+		time = cap1.stop_capture();
+		s = "Time for full InverseTransform: " + std::to_string(time);
+		BSP_LCD_DisplayStringAtLine(lcd_line++, (unsigned char *)s.data());
+		/****************************************************************/
+		/************Обратное преобразование не оптимизированное*********/
+
+
+		/************Обратное преобразование не оптимизированное*********/
+		/****************************************************************/
+
+		/****************************************************************/
+		/************Обратное преобразование не оптимизированное*********/
+
+		// Display data
+		HAL_UART_Transmit(&huart1, (unsigned char *)"\r\nidwt=", 7, 1000);
+		for (uint16_t i = 0; i < data->getPixelCnt() - 1; ++i) {
+			s = std::to_string(idwt[i]) + ",";
+			HAL_UART_Transmit(&huart1, (unsigned char *)s.data(), s.size(), 1000);
+		}
+
+		HAL_UART_Transmit(&huart1, (unsigned char *)"\r\ndwt=", 6, 1000);
+		s = "";
+		for (uint16_t i = 0; i < out_size; ++i) {
+			int16_t low = dwt.dwt[i];
+			int16_t high = dwt.dwt[i] >> 16;
 			s = std::to_string(low) + "," + std::to_string(high) + ",";
 			HAL_UART_Transmit(&huart1, (unsigned char *)s.data(), s.size(), 1000);
-		}*/
+		}
 
 		for (uint16_t i = 0; i < out_size; ++i) {
-			int16_t low = res_arr[i];
-			int16_t high = res_arr[i] >> 16;
+			int16_t low = dwt.dwt[i];
+			int16_t high = dwt.dwt[i] >> 16;
 			uint16_t posx = (uint16_t)(i * (1024.0 / out_size / 2)) << 1;
 			uint16_t posy = 480-10;
 			if (low < 0){
@@ -235,7 +348,6 @@ int main(void)
 
 		data->closeFile();
 		delete data;
-		delete[] c_line;
 	}
 	else {
 		BSP_LCD_DisplayStringAtLine(lcd_line++, (unsigned char *)"File open error! check filename...");

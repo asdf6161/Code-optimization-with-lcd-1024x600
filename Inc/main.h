@@ -79,6 +79,8 @@ typedef uint32_t dType;		// type for to subtract matrices with deviation
 typedef int16_t bType;		// basic type for main data
 typedef int8_t sType;		// type for to subtract matrices
 typedef uint32_t combType;
+typedef uint16_t tcd_type;
+#define tcd_buffer_size 8000
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -92,6 +94,8 @@ typedef uint32_t combType;
 #define LED1_GPIO_Port GPIOG
 #define LED2_Pin GPIO_PIN_3
 #define LED2_GPIO_Port GPIOG
+#define ICG_Pin GPIO_PIN_5
+#define ICG_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 #define USE_LCD        /* enable LCD  */  
 //#define USE_DHCP       /* enable DHCP, if disabled static address is used */

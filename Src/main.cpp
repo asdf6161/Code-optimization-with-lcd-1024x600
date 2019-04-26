@@ -48,7 +48,8 @@
 #include "gpio.h"
 #include "fmc.h"
 #include "usart.h"
-
+#include "tim.h"
+#include "adc.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 extern "C" {
@@ -56,6 +57,7 @@ extern "C" {
 #include "stm32746g_LCD.h"
 #include "lcd_log.h"
 #include "stm32f7xx_hal_ltdc.h"
+#include "TCD1304DG.h"
 }
 #include "VideoData.h"
 #include "Dwt.h"
@@ -92,12 +94,13 @@ static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 uint32_t code_analis[10];
+tcd_type tcd_res[tcd_buffer_size];
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 static vector<float> DirectTransformVector(vector<float> SourceList, int N)
-{
+				{
 	if (SourceList.size() == 1 || N == 0)
 		return SourceList;
 
@@ -111,11 +114,11 @@ static vector<float> DirectTransformVector(vector<float> SourceList, int N)
 	}
 
 	vector<float> res = DirectTransformVector(TmpArr, N-1);
-//	vector<float>::iterator it = res.iterator;
+	//	vector<float>::iterator it = res.iterator;
 	RetVal.insert(RetVal.begin(), res.begin(), res.end());
 
 	return RetVal;
-}
+				}
 /* USER CODE END 0 */
 
 /**
@@ -132,7 +135,7 @@ int main(void)
 	uint32_t r = __PKHBT(fisrt,secound, 16);  // 6 8
 	uint32_t r2 = __PKHTB(secound,fisrt, 16);  // 7 9
 
-//	res_arr = new combType[1000];
+	//	res_arr = new combType[1000];
 	/* USER CODE END 1 */
 
 	/* MPU Configuration--------------------------------------------------------*/
@@ -169,7 +172,13 @@ int main(void)
 	MX_SDMMC1_SD_Init();
 	MX_FATFS_Init();
 	MX_USART1_UART_Init();
+	MX_TIM8_Init();
+	MX_TIM9_Init();
+	MX_ADC1_Init();
 	/* USER CODE BEGIN 2 */
+	HAL_TIM_Base_Start(&htim8);
+	HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1);
 	/* Initialize the SDRAM */
 	BSP_SDRAM_Init();
 
@@ -196,6 +205,7 @@ int main(void)
 	LCD_LOG_SetHeader((uint8_t *)"Dissertation on STM32F746IGT");
 	BSP_LCD_SelectLayer(0);
 	BSP_LCD_SetFont(&Font20);
+//	HAL_ADC_Start_IT(&hadc1);
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -203,7 +213,11 @@ int main(void)
 	VideoData *data = new VideoData();
 	Dwt dwt = Dwt();
 
-//	TimeCapture *cap = new TimeCapture();
+	while(true){
+		TCD_start();
+		HAL_Delay(50);
+	}
+	//	TimeCapture *cap = new TimeCapture();
 
 	bType* line;
 	bType* lineLow;
@@ -227,7 +241,7 @@ int main(void)
 			lst.push_back(line[i]);
 		}
 		vector<float> res_lst = DirectTransformVector(lst, 3);
-//		vector<float> lst_res = Dwt::DirectTransformVector(lst);
+		//		vector<float> lst_res = Dwt::DirectTransformVector(lst);
 
 		time = cap1.stop_capture();
 		s = "Time for code from wiki: " + std::to_string(time);
@@ -273,7 +287,7 @@ int main(void)
 
 		/************Обратное преобразование не оптимизированное*********/
 		/****************************************************************/
-		s = "";
+		/*s = "";
 		cap1.reset_cnt();
 		cap1.start_capture();
 
@@ -282,7 +296,7 @@ int main(void)
 
 		time = cap1.stop_capture();
 		s = "Time for full InverseTransform: " + std::to_string(time);
-		BSP_LCD_DisplayStringAtLine(lcd_line++, (unsigned char *)s.data());
+		BSP_LCD_DisplayStringAtLine(lcd_line++, (unsigned char *)s.data());*/
 		/****************************************************************/
 		/************Обратное преобразование не оптимизированное*********/
 
@@ -294,11 +308,11 @@ int main(void)
 		/************Обратное преобразование не оптимизированное*********/
 
 		// Display data
-		HAL_UART_Transmit(&huart1, (unsigned char *)"\r\nidwt=", 7, 1000);
+		/*HAL_UART_Transmit(&huart1, (unsigned char *)"\r\nidwt=", 7, 1000);
 		for (uint16_t i = 0; i < data->getPixelCnt() - 1; ++i) {
 			s = std::to_string(idwt[i]) + ",";
 			HAL_UART_Transmit(&huart1, (unsigned char *)s.data(), s.size(), 1000);
-		}
+		}*/
 
 		HAL_UART_Transmit(&huart1, (unsigned char *)"\r\ndwt=", 6, 1000);
 		s = "";
